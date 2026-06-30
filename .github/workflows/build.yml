@@ -39,6 +39,8 @@ jobs:
     runs-on: windows-latest
     needs: lint
     if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
