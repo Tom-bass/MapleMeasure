@@ -53,8 +53,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Create empty assets folder
-        run: mkdir assets
+      - name: Create assets folder with placeholder so PyInstaller bundles it
+        run: |
+          mkdir assets
+          New-Item -Path assets/.gitkeep -ItemType File
         shell: pwsh
 
       - name: Build EXE

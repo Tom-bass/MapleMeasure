@@ -1,3 +1,4 @@
+import os
 import threading
 import webbrowser
 from contextlib import asynccontextmanager
@@ -21,7 +22,8 @@ app = FastAPI(lifespan=lifespan)
 
 app.mount("/static",  StaticFiles(directory=STATIC_DIR),  name="static")
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
-app.mount("/assets",  StaticFiles(directory=ASSETS_DIR),  name="assets")
+if os.path.isdir(ASSETS_DIR) and os.listdir(ASSETS_DIR):
+    app.mount("/assets", StaticFiles(directory=ASSETS_DIR), name="assets")
 
 app.include_router(api.router)
 app.include_router(sessions.router)
