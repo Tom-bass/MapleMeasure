@@ -1,0 +1,8 @@
+# Core web framework
+fastapi==0.115.12
+uvicorn[standard]==0.34.3
+jinja2==3.1.6
+python-multipart==0.0.20
+
+# Build — only needed for packaging, not at runtime
+pyinstaller==6.13.0

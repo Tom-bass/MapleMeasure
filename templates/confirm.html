@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Confirm Session — MapleMeasure{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Review Extracted Data</h1>
+  <p>Check every field before saving. Correct anything the model got wrong.</p>
+</div>
+
+{% if parse_error %}
+<div class="alert alert-warning mb-2">
+  The model returned output that couldn't be parsed as JSON.
+  All fields have been left blank — please fill them in manually.<br>
+  <small class="text-muted">Error: {{ parse_error }}</small>
+</div>
+{% endif %}
+
+<form method="post" action="/sessions/create" id="confirmForm">
+
+  <input type="hidden" name="image_filename"   value="{{ image_filename }}">
+  <input type="hidden" name="raw_llm_response" value="{{ raw_llm_response | e }}">
+
+  <div class="confirm-split">
+
+    <!-- Left: image -->
+    <div>
+      <div class="card" style="padding:1rem">
+        <div class="card-title">Screenshot</div>
+        <img src="/uploads/{{ image_filename }}" alt="Session screenshot" class="session-img">
+      </div>
+    </div>
+
+    <!-- Right: fields -->
+    <div>
+      <div class="card mb-2">
+        <div class="card-title">Session Info</div>
+
+        <div class="form-group">
+          <label>Session Date</label>
+          <input type="date" name="session_date"
+                 value="{{ data.session_date or '' }}">
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Level Before</label>
+            <input type="number" name="level_before" id="level_before" min="1" max="300"
+                   value="{{ data.level_before or '' }}" oninput="checkLevelPct()">
+          </div>
+          <div class="form-group">
+            <label>Level % Before</label>
+            <input type="number" name="level_pct_before" id="level_pct_before" min="0" max="100" step="0.01"
+                   value="{{ data.level_pct_before or '' }}" oninput="checkLevelPct()">
+          </div>
+          <div class="form-group">
+            <label>Level After</label>
+            <input type="number" name="level_after" id="level_after" min="1" max="300"
+                   value="{{ data.level_after or '' }}" oninput="checkLevelPct()">
+          </div>
+          <div class="form-group">
+            <label>Level % After</label>
+            <input type="number" name="level_pct_after" id="level_pct_after" min="0" max="100" step="0.01"
+                   value="{{ data.level_pct_after or '' }}" oninput="checkLevelPct()">
+          </div>
+        </div>
+        <div id="level-pct-warning" class="alert alert-warning mt-1" style="display:none"></div>
+      </div>
+
+      <div class="card mb-2">
+        <div class="card-title">Battle Stats</div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label>{{ labels.auto_battle_minutes }}</label>
+            <input type="number" name="auto_battle_minutes" min="0"
+                   value="{{ data.auto_battle_minutes or '' }}">
+          </div>
+          <div class="form-group">
+            <label>{{ labels.kills }}</label>
+            <input type="number" name="kills" min="0"
+                   value="{{ data.kills or '' }}">
+          </div>
+          <div class="form-group">
+            <label>{{ labels.solo_frags }}</label>
+            <input type="number" name="solo_frags" min="0"
+                   value="{{ data.solo_frags or '' }}">
+          </div>
+          <div class="form-group">
+            <label>{{ labels.mesos_earned }}</label>
+            <input type="number" name="mesos_earned" min="0"
+                   value="{{ data.mesos_earned or '' }}">
+          </div>
+          <div class="form-group">
+            <label>{{ labels.red_mesos_earned }}</label>
+            <input type="number" name="red_mesos_earned" min="0"
+                   value="{{ data.red_mesos_earned or '' }}">
+          </div>
+          <div class="form-group">
+            <label>{{ labels.exp_gained }}</label>
+            <input type="number" name="exp_gained" min="0"
+                   value="{{ data.exp_gained or '' }}">
+          </div>
+          <div class="form-group">
+            <label>{{ labels.exp_pct_gained }}</label>
+            <input type="number" name="exp_pct_gained" id="exp_pct_gained" min="0" step="0.001"
+                   value="{{ data.exp_pct_gained or '' }}" oninput="checkLevelPct()">
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-2">
+        <div class="form-group" style="margin-bottom:0">
+          <label>Notes</label>
+          <textarea name="notes" placeholder="Optional notes about this session…"></textarea>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /confirm-split -->
+
+  <!-- Drops table — full width below -->
+  <div class="card mt-2 mb-2">
+    <div class="flex-between mb-1">
+      <span class="card-title" style="margin-bottom:0">Items Dropped</span>
+      <button type="button" class="btn btn-secondary" onclick="addDropRow()">+ Add Item</button>
+    </div>
+
+    <div id="drops-container">
+      {% for drop in data.drops %}
+      <div class="drop-row">
+        <input type="text"   name="item_name[]" value="{{ drop.item_name }}" placeholder="Item name">
+        <input type="number" name="quantity[]"  value="{{ drop.quantity }}"  placeholder="Qty" min="0" style="width:100px">
+        <button type="button" class="btn btn-secondary" onclick="removeDropRow(this)">Remove</button>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if not data.drops %}
+    <p class="text-muted text-sm">No items extracted. Add them manually if needed.</p>
+    {% endif %}
+  </div>
+
+  <div class="flex gap-2">
+    <button type="submit" class="btn btn-primary">Confirm &amp; Save</button>
+    <a href="/upload" class="btn btn-secondary">Cancel</a>
+  </div>
+
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function checkLevelPct() {
+  const lb  = parseFloat(document.getElementById('level_before').value);
+  const la  = parseFloat(document.getElementById('level_after').value);
+  const pb  = parseFloat(document.getElementById('level_pct_before').value);
+  const pa  = parseFloat(document.getElementById('level_pct_after').value);
+  const exp = parseFloat(document.getElementById('exp_pct_gained').value);
+  const el  = document.getElementById('level-pct-warning');
+
+  if (lb && la && lb === la && !isNaN(pb) && !isNaN(pa) && !isNaN(exp)) {
+    const diff = Math.abs((pa - pb) - exp);
+    if (diff > 0.2) {
+      el.style.display = '';
+      el.textContent   = 'Level % cross-check: expected ~' + (pb + exp).toFixed(2)
+        + '% after (before ' + pb + '% + ' + exp + '% EXP), but "After" reads '
+        + pa + '%. Check the percentage fields above.';
+      return;
+    }
+  }
+  el.style.display = 'none';
+}
+
+checkLevelPct();
+</script>
+{% endblock %}

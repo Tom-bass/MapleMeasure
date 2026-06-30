@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Import CSV — MapleMeasure{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="flex gap-2" style="align-items:center;margin-bottom:0.25rem">
+    <a href="/sessions" class="text-muted text-sm" style="text-decoration:none">&larr; History</a>
+  </div>
+  <h1>Import CSV</h1>
+  <p>Upload a CSV file to bulk-import sessions.</p>
+</div>
+
+{% if result and result.error %}
+<div class="alert alert-error mb-2">{{ result.error }}</div>
+{% endif %}
+
+{% if result and result.imported is defined %}
+  {% if result.imported > 0 %}
+  <div class="alert alert-success mb-2" style="background:rgba(63,185,80,0.1);border:1px solid var(--success);color:var(--success);border-radius:6px;padding:0.75rem 1rem">
+    {{ result.imported }} session{{ 's' if result.imported != 1 else '' }} imported successfully.
+    <a href="/sessions" style="color:var(--success);font-weight:600;margin-left:0.5rem">View History &rarr;</a>
+  </div>
+  {% endif %}
+
+  {% if result.skipped > 0 %}
+  <div class="card mb-2" style="border-color:var(--warning)">
+    <div class="card-title" style="color:var(--warning)">{{ result.skipped }} row{{ 's' if result.skipped != 1 else '' }} skipped</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Row</th><th>Issue</th></tr>
+        </thead>
+        <tbody>
+          {% for e in result.row_errors %}
+          <tr>
+            <td class="text-muted text-sm">{{ e.row }}</td>
+            <td>{{ e.messages | join('; ') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if result.imported == 0 and result.skipped == 0 %}
+  <div class="alert alert-warning mb-2">The file contained no data rows.</div>
+  {% endif %}
+{% endif %}
+
+<div class="card" style="max-width:520px">
+  <form method="post" action="/import" enctype="multipart/form-data">
+    <div class="form-group">
+      <label for="file">CSV File</label>
+      <input type="file" id="file" name="file" accept=".csv,text/csv" required>
+    </div>
+
+    <div class="card mb-2" style="background:var(--card-bg2);font-size:0.82rem;padding:0.75rem 1rem">
+      <div class="card-title" style="font-size:0.82rem;margin-bottom:0.4rem">Expected columns</div>
+      <code style="color:var(--accent)">session_date, auto_battle_minutes, kills, solo_frags</code>
+      <ul style="margin-top:0.5rem;padding-left:1.2rem;color:var(--muted);line-height:1.8">
+        <li><strong>session_date</strong> — YYYY-MM-DD (optional, leave blank if unknown)</li>
+        <li><strong>auto_battle_minutes</strong> — positive integer</li>
+        <li><strong>kills</strong> — non-negative integer</li>
+        <li><strong>solo_frags</strong> — non-negative integer</li>
+      </ul>
+      <p style="margin-top:0.5rem;color:var(--muted)">
+        Extra columns (e.g. <code>id</code>, <code>created_at</code>) are ignored.
+        Rows with invalid numeric fields are skipped and reported above.
+      </p>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-full">Import</button>
+  </form>
+</div>
+{% endblock %}

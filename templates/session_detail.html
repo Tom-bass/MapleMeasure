@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Session #{{ session.id }} — MapleMeasure{% endblock %}
+
+{% block content %}
+<div class="page-header flex-between" style="align-items:flex-start">
+  <div>
+    <div class="flex gap-2" style="align-items:center;margin-bottom:0.25rem">
+      <a href="/sessions" class="text-muted text-sm" style="text-decoration:none">&larr; History</a>
+    </div>
+    <h1>Session #{{ session.id }}</h1>
+    {% if session.session_date %}<p>{{ session.session_date }}</p>{% endif %}
+  </div>
+  <div class="flex gap-1" style="margin-top:0.25rem">
+    <a href="/sessions/{{ session.id }}/edit" class="btn btn-secondary">Edit</a>
+    <button type="button" class="btn btn-danger" onclick="document.getElementById('delete-modal').style.display='flex'">Delete</button>
+  </div>
+</div>
+
+<div id="delete-modal" class="modal-backdrop" style="display:none">
+  <div class="modal-box">
+    <h2 style="font-size:1.1rem;margin-bottom:0.75rem;color:var(--error)">Delete Session #{{ session.id }}?</h2>
+    <p class="text-muted text-sm" style="margin-bottom:1.25rem">
+      This will permanently remove the session. This cannot be undone.
+    </p>
+    <div class="flex gap-1">
+      <form method="post" action="/sessions/{{ session.id }}/delete">
+        <button type="submit" class="btn btn-danger">Yes, delete</button>
+      </form>
+      <button type="button" class="btn btn-secondary" onclick="document.getElementById('delete-modal').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="{% if session.image_filename %}grid-2{% endif %} mb-2">
+
+  <div class="card">
+    <div class="card-title">Battle Stats</div>
+    <table style="font-size:0.9rem">
+      <tr>
+        <td class="text-muted" style="padding:0.35rem 0.75rem 0.35rem 0">Duration</td>
+        <td style="padding:0.35rem 0">
+          {% if session.auto_battle_minutes %}
+            {{ session.auto_battle_minutes }} min
+          {% else %}—{% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td class="text-muted" style="padding:0.35rem 0.75rem 0.35rem 0">Monsters Killed</td>
+        <td style="padding:0.35rem 0">
+          {{ "{:,}".format(session.kills) if session.kills else '—' }}
+        </td>
+      </tr>
+      <tr>
+        <td class="text-muted" style="padding:0.35rem 0.75rem 0.35rem 0">SOL Frags Gathered</td>
+        <td style="padding:0.35rem 0">
+          {{ "{:,}".format(session.solo_frags) if session.solo_frags else '—' }}
+        </td>
+      </tr>
+      {% if session.auto_battle_minutes and session.kills %}
+      <tr>
+        <td class="text-muted" style="padding:0.35rem 0.75rem 0.35rem 0">Kills / Hour</td>
+        <td style="padding:0.35rem 0;color:var(--accent)">
+          {{ "{:,}".format((session.kills / (session.auto_battle_minutes / 60)) | int) }}
+        </td>
+      </tr>
+      {% endif %}
+      {% if session.auto_battle_minutes and session.solo_frags %}
+      <tr>
+        <td class="text-muted" style="padding:0.35rem 0.75rem 0.35rem 0">Frags / Hour</td>
+        <td style="padding:0.35rem 0;color:var(--accent)">
+          {{ "{:,}".format((session.solo_frags / (session.auto_battle_minutes / 60)) | int) }}
+        </td>
+      </tr>
+      {% endif %}
+      {% if session.kills and session.solo_frags is not none %}
+      <tr>
+        <td class="text-muted" style="padding:0.35rem 0.75rem 0.35rem 0">Frags / 1K Kills</td>
+        <td style="padding:0.35rem 0;color:var(--accent)">
+          {{ (session.solo_frags / session.kills * 1000) | round(2) }}
+        </td>
+      </tr>
+      {% endif %}
+    </table>
+  </div>
+
+  {% if session.image_filename %}
+  <div class="card">
+    <div class="card-title">Screenshot</div>
+    <img src="/uploads/{{ session.image_filename }}" alt="Session screenshot" class="session-img">
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

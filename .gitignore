@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# PyInstaller build artefacts
+build/
+dist/
+# Ignore auto-generated spec files (e.g. from running `pyinstaller app.py` directly)
+# but NOT MapleTracker.spec which is hand-authored and tracked
+app.spec
+
+# Runtime files — never commit user data or local config
+mapletracker.db
+uploads/
+config.json
+test.jpg
+
+# Editor / tooling
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Claude Code internal settings
+.claude/
+
+# Local assets (large binaries, copyrighted audio, etc.)
+assets/

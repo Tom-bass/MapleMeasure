@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Settings — MapleMeasure{% endblock %}
+
+{% block head %}
+<style>
+.toggle-switch { position:relative; display:inline-block; flex-shrink:0; }
+.toggle-switch input { opacity:0; width:0; height:0; position:absolute; }
+.toggle-track {
+  display:block; width:44px; height:24px; border-radius:12px;
+  background:var(--border); cursor:pointer; transition:background .2s;
+}
+.toggle-switch input:checked + .toggle-track { background:var(--accent); }
+.toggle-thumb {
+  position:absolute; top:3px; left:3px; width:18px; height:18px;
+  border-radius:50%; background:#fff; transition:transform .2s;
+}
+.toggle-switch input:checked + .toggle-track .toggle-thumb { transform:translateX(20px); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Settings</h1>
+</div>
+
+<div class="card" style="max-width:520px">
+  <form method="post" action="/settings">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:1.5rem">
+      <div>
+        <div style="font-weight:500;margin-bottom:0.25rem">Auto-backup on launch</div>
+        <div class="text-muted text-sm">
+          Automatically download a CSV of all sessions each time MapleMeasure opens.
+          The file saves to your default Downloads folder.
+        </div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" name="auto_backup" value="on"
+               {% if cfg.auto_backup %}checked{% endif %}>
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+    </div>
+
+    <div style="margin-top:1.25rem;border-top:1px solid var(--border);padding-top:1.25rem">
+      <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Models — MapleMeasure{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Model Management</h1>
+  <p>Pull and manage Ollama vision models used for screenshot extraction.</p>
+</div>
+
+{% if not ollama_ok %}
+<div class="alert alert-error">
+  Ollama is not running. Start Ollama, then refresh this page.
+</div>
+{% endif %}
+
+<!-- Currently selected -->
+<div class="card mb-2">
+  <div class="card-title">Active Model</div>
+  {% if selected_model %}
+    <p><span class="badge badge-success">{{ selected_model }}</span>
+    is currently selected for extraction.</p>
+  {% else %}
+    <p class="text-muted text-sm">No model selected. Select one from the installed list below.</p>
+  {% endif %}
+</div>
+
+<!-- Installed models -->
+<div class="card mb-2">
+  <div class="card-title">Installed Models</div>
+
+  {% if installed %}
+    {% for m in installed %}
+    <div class="model-item">
+      <div>
+        <div class="model-name">
+          {{ m }}
+          {% if m == selected_model %}
+            <span class="badge badge-success" style="margin-left:0.5rem">active</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="flex gap-1">
+        {% if m != selected_model %}
+        <form method="post" action="/models/select" style="display:inline">
+          <input type="hidden" name="model" value="{{ m }}">
+          <button type="submit" class="btn btn-blue">Use this model</button>
+        </form>
+        {% endif %}
+        <form method="post" action="/models/delete" style="display:inline"
+              onsubmit="return confirm('Delete {{ m }}? This cannot be undone.')">
+          <input type="hidden" name="model" value="{{ m }}">
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p class="text-muted text-sm">No models installed yet. Pull one below.</p>
+  {% endif %}
+</div>
+
+<!-- Recommended models -->
+<div class="card">
+  <div class="card-title">Recommended Vision Models</div>
+  <p class="text-muted text-sm mb-2">
+    These models have been tested for MapleStory Classic screenshot extraction.
+  </p>
+
+  {% for rec in recommended %}
+  <div class="model-item">
+    <div>
+      <div class="model-name">{{ rec.name }}</div>
+      <div class="model-meta">{{ rec.description }}</div>
+    </div>
+    <div>
+      {% if rec.name in installed %}
+        <span class="badge badge-muted">Installed</span>
+      {% elif ollama_ok %}
+        <button class="btn btn-blue"
+                id="pull-btn-{{ loop.index }}"
+                onclick="pullModel('{{ rec.name }}', {{ loop.index }})">
+          Pull
+        </button>
+      {% else %}
+        <span class="badge badge-muted">Ollama offline</span>
+      {% endif %}
+    </div>
+  </div>
+  <div id="pull-progress-{{ loop.index }}" class="pull-status" style="display:none"></div>
+  {% endfor %}
+</div>
+
+{% endblock %}

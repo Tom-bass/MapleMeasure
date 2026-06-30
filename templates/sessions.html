@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Session History — MapleMeasure{% endblock %}
+
+{% block content %}
+<div class="page-header flex-between">
+  <div>
+    <h1>Session History</h1>
+    <p>{{ total }} session{{ 's' if total != 1 else '' }} logged</p>
+  </div>
+  <div class="flex gap-1">
+    <a href="/import" class="btn btn-secondary">Import CSV</a>
+    <a href="/sessions/export" class="btn btn-secondary">Export CSV</a>
+    <a href="/upload" class="btn btn-primary">New Session</a>
+  </div>
+</div>
+
+{% if analytics.count > 0 %}
+<!-- Charts -->
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem">
+  <div class="card">
+    <div class="card-title">Duration (min)</div>
+    <div class="chart-container" style="height:200px">
+      <canvas id="chartMinutes"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Kills</div>
+    <div class="chart-container" style="height:200px">
+      <canvas id="chartKills"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">SOL Frags</div>
+    <div class="chart-container" style="height:200px">
+      <canvas id="chartFrags"></canvas>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% macro sort_link(label, field) %}
+  {% if sort == field %}
+    <a href="/sessions?sort={{ field }}&order={{ 'asc' if order == 'desc' else 'desc' }}&page=1">
+      {{ label }}{% if order == 'asc' %} &uarr;{% else %} &darr;{% endif %}
+    </a>
+  {% else %}
+    <a href="/sessions?sort={{ field }}&order=desc&page=1">{{ label }}</a>
+  {% endif %}
+{% endmacro %}
+
+<div class="card">
+  {% if sessions %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>{{ sort_link('Date', 'session_date') }}</th>
+          <th>{{ sort_link('Duration (min)', 'auto_battle_minutes') }}</th>
+          <th>{{ sort_link('Kills', 'kills') }}</th>
+          <th>{{ sort_link('SOL Frags', 'solo_frags') }}</th>
+          <th>Frags / 1K Kills</th>
+          <th>{{ sort_link('Logged', 'created_at') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in sessions %}
+        <tr onclick="window.location='/sessions/{{ s.id }}'" style="cursor:pointer">
+          <td class="text-muted text-sm">{{ s.id }}</td>
+          <td><a href="/sessions/{{ s.id }}">{{ s.session_date or '—' }}</a></td>
+          <td>{{ s.auto_battle_minutes or '—' }}</td>
+          <td>{{ "{:,}".format(s.kills) if s.kills else '—' }}</td>
+          <td>{{ "{:,}".format(s.solo_frags) if s.solo_frags else '—' }}</td>
+          <td>{{ (s.solo_frags / s.kills * 1000) | round(2) if (s.kills and s.solo_frags is not none) else '—' }}</td>
+          <td class="text-muted text-sm">{{ s.created_at[:10] if s.created_at else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      {% if analytics.count > 0 %}
+      <tfoot style="font-size:0.82rem;color:var(--muted)">
+        <tr style="border-top:2px solid var(--border)">
+          <td colspan="2" style="font-weight:600;color:var(--text)">Avg / session</td>
+          <td>{{ analytics.avg_minutes }}</td>
+          <td>{{ "{:,}".format(analytics.avg_kills) }}</td>
+          <td>{{ analytics.avg_frags }}</td>
+          <td>{{ analytics.avg_frags_per_1k }}</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td colspan="2" style="font-weight:600;color:var(--text)">Total</td>
+          <td>{{ "{:,}".format(analytics.total_minutes) }}</td>
+          <td>{{ "{:,}".format(analytics.total_kills) }}</td>
+          <td>{{ "{:,}".format(analytics.total_frags) }}</td>
+          <td>{{ analytics.total_frags_per_1k }}</td>
+          <td></td>
+        </tr>
+      </tfoot>
+      {% endif %}
+    </table>
+  </div>
+
+  {% if total_pages > 1 %}
+  <div class="pagination mt-2">
+    {% if page > 1 %}
+      <a href="/sessions?sort={{ sort }}&order={{ order }}&page={{ page - 1 }}" class="page-btn">&laquo; Prev</a>
+    {% else %}
+      <span class="page-btn" style="opacity:.4;pointer-events:none">&laquo; Prev</span>
+    {% endif %}
+
+    {% for p in range(1, total_pages + 1) %}
+      {% if p == page %}
+        <span class="page-btn active">{{ p }}</span>
+      {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+        <a href="/sessions?sort={{ sort }}&order={{ order }}&page={{ p }}" class="page-btn">{{ p }}</a>
+      {% elif p == page - 3 or p == page + 3 %}
+        <span class="text-muted" style="padding:0 0.25rem">…</span>
+      {% endif %}
+    {% endfor %}
+
+    {% if page < total_pages %}
+      <a href="/sessions?sort={{ sort }}&order={{ order }}&page={{ page + 1 }}" class="page-btn">Next &raquo;</a>
+    {% else %}
+      <span class="page-btn" style="opacity:.4;pointer-events:none">Next &raquo;</span>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <p class="text-muted text-sm">No sessions yet. <a href="/upload">Log your first session.</a></p>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if analytics.count > 0 %}
+<script>
+(function() {
+  const labels  = {{ chart_labels | safe }};
+  const minutes = {{ chart_minutes | safe }};
+  const kills   = {{ chart_kills | safe }};
+  const frags   = {{ chart_frags | safe }};
+
+  const baseOpts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: '#8b949e', maxRotation: 45 }, grid: { color: '#21262d' } },
+      y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' }, beginAtZero: true }
+    }
+  };
+
+  function bar(id, data, color) {
+    new Chart(document.getElementById(id), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: color + '99',
+          borderColor: color,
+          borderWidth: 1,
+          borderRadius: 3,
+        }]
+      },
+      options: { ...baseOpts }
+    });
+  }
+
+  bar('chartMinutes', minutes, '#8b949e');
+  bar('chartKills',   kills,   '#f0a500');
+  bar('chartFrags',   frags,   '#1a6fb5');
+})();
+</script>
+{% endif %}
+{% endblock %}

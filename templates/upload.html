@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}New Session — MapleMeasure{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>New Session</h1>
+  <p>Enter the results from your auto-battle session.</p>
+</div>
+
+{% if error %}
+<div class="alert alert-error mb-2">{{ error }}</div>
+{% endif %}
+
+<div class="card" style="max-width:520px;margin:auto">
+  <form method="post" action="/sessions/create" enctype="multipart/form-data">
+
+    <div class="form-group">
+      <label for="session_date">Date</label>
+      <input type="date" id="session_date" name="session_date"
+             value="{{ today }}" required>
+    </div>
+
+    <div class="form-group">
+      <label for="auto_battle_minutes">Duration (minutes)</label>
+      <input type="number" id="auto_battle_minutes" name="auto_battle_minutes"
+             min="1" placeholder="e.g. 60" required>
+    </div>
+
+    <div class="form-group">
+      <label for="kills">Monsters Killed</label>
+      <input type="number" id="kills" name="kills"
+             min="0" placeholder="e.g. 12000" required>
+    </div>
+
+    <div class="form-group">
+      <label for="solo_frags">SOL Frags Gathered</label>
+      <input type="number" id="solo_frags" name="solo_frags"
+             min="0" placeholder="e.g. 150" required>
+    </div>
+
+    <div class="form-group">
+      <label for="file">Screenshot <span class="text-muted text-sm">(optional)</span></label>
+      <input type="file" id="file" name="file" accept="image/*"
+             onchange="previewImage(this)">
+    </div>
+
+    <div id="preview-wrap" style="display:none;margin-bottom:1rem">
+      <img id="preview-img" src="" alt="Preview"
+           style="max-width:100%;max-height:300px;border-radius:6px;border:1px solid var(--border)">
+    </div>
+
+    <button type="submit" class="btn btn-primary w-full">Save Session</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function previewImage(input) {
+  const wrap = document.getElementById('preview-wrap');
+  const img  = document.getElementById('preview-img');
+  if (input.files && input.files[0]) {
+    img.src = URL.createObjectURL(input.files[0]);
+    wrap.style.display = 'block';
+  }
+}
+</script>
+{% endblock %}

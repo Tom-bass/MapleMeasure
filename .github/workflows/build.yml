@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  # ── Lint / syntax check ─────────────────────────────────────────────────────
+  # Runs on every push and PR so broken commits are caught before tagging.
+  lint:
+    name: Lint (Python 3.13)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt ruff
+
+      - name: Syntax check (ruff)
+        run: ruff check app.py core.py database.py config.py routes/
+
+      - name: Import check
+        run: python -c "import app; print('import OK')"
+
+  # ── Windows EXE build ───────────────────────────────────────────────────────
+  # Only runs when a vX.Y.Z tag is pushed.  Produces MapleMeasure.exe and
+  # attaches it to the GitHub Release that the tag creates.
+  build-windows:
+    name: Build Windows EXE
+    runs-on: windows-latest
+    needs: lint
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Create empty assets folder
+        run: mkdir assets
+        shell: pwsh
+
+      - name: Build EXE
+        run: pyinstaller MapleTracker.spec
+
+      - name: Verify EXE was produced
+        run: |
+          if (!(Test-Path "dist/MapleMeasure.exe")) {
+            Write-Error "dist/MapleMeasure.exe not found — build failed"
+            exit 1
+          }
+          $size = (Get-Item "dist/MapleMeasure.exe").Length / 1MB
+          Write-Host "MapleMeasure.exe — $([math]::Round($size, 1)) MB"
+        shell: pwsh
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/MapleMeasure.exe
+          generate_release_notes: true

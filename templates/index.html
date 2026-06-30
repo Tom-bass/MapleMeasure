@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — MapleMeasure{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1>Dashboard</h1>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Sessions Logged</div>
+    <div class="stat-value">{{ total_sessions }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Auto-Battle Hours</div>
+    <div class="stat-value">{{ total_hours }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total Kills</div>
+    <div class="stat-value" style="font-size:1.4rem">{{ total_kills }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total SOL Frags</div>
+    <div class="stat-value" style="font-size:1.4rem">{{ total_frags }}</div>
+  </div>
+</div>
+
+{% if chart_labels != '[]' %}
+<div class="grid-2 mb-2" style="gap:1rem">
+  <div class="card">
+    <div class="card-title">Kills per Day</div>
+    <div class="chart-container">
+      <canvas id="chartKills"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">SOL Frags per Day</div>
+    <div class="chart-container">
+      <canvas id="chartFrags"></canvas>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="flex-between mb-1">
+    <span class="card-title" style="margin-bottom:0">Recent Sessions</span>
+    <a href="/sessions" class="text-sm" style="color:var(--accent)">View all</a>
+  </div>
+
+  {% if recent %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Duration (min)</th>
+          <th>Kills</th>
+          <th>SOL Frags</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in recent %}
+        <tr>
+          <td><a href="/sessions/{{ s.id }}">{{ s.session_date or '—' }}</a></td>
+          <td>{{ s.auto_battle_minutes or '—' }}</td>
+          <td>{{ "{:,}".format(s.kills) if s.kills else '—' }}</td>
+          <td>{{ "{:,}".format(s.solo_frags) if s.solo_frags else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted text-sm">No sessions logged yet. <a href="/upload">Log your first session.</a></p>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{% if auto_backup %}
+<script>
+if (!sessionStorage.getItem('backup_done')) {
+  sessionStorage.setItem('backup_done', '1');
+  const a = document.createElement('a');
+  a.href = '/sessions/export';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+</script>
+{% endif %}
+{% if chart_labels != '[]' %}
+<script>
+(function() {
+  const labels = {{ chart_labels | safe }};
+  const kills  = {{ chart_kills | safe }};
+  const frags  = {{ chart_frags | safe }};
+
+  const baseOpts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: '#8b949e', maxTicksLimit: 8 }, grid: { color: '#21262d' } },
+      y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
+    }
+  };
+
+  new Chart(document.getElementById('chartKills'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: kills,
+        borderColor: '#f0a500',
+        backgroundColor: 'rgba(240,165,0,0.08)',
+        tension: 0.3,
+        pointRadius: 3,
+        fill: true,
+      }]
+    },
+    options: { ...baseOpts }
+  });
+
+  new Chart(document.getElementById('chartFrags'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: frags,
+        borderColor: '#1a6fb5',
+        backgroundColor: 'rgba(26,111,181,0.08)',
+        tension: 0.3,
+        pointRadius: 3,
+        fill: true,
+      }]
+    },
+    options: { ...baseOpts }
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

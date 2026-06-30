@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}MapleMeasure{% endblock %}</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍁</text></svg>">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" crossorigin="anonymous"></script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<nav class="nav">
+  <span class="nav-brand">MapleMeasure</span>
+  <div class="nav-links">
+    <a href="/"         class="nav-link {% if request.url.path == '/' %}active{% endif %}">Dashboard</a>
+    <a href="/upload"   class="nav-link {% if request.url.path == '/upload' %}active{% endif %}">New Session</a>
+    <a href="/sessions" class="nav-link {% if request.url.path.startswith('/sessions') %}active{% endif %}">History</a>
+    <a href="/settings" class="nav-link {% if request.url.path == '/settings' %}active{% endif %}">Settings</a>
+  </div>
+</nav>
+
+<main class="main">
+  {% block content %}{% endblock %}
+</main>
+
+<div id="player-bar" class="player-bar" hidden>
+  <div class="player-controls">
+    <button id="player-prev" class="player-btn" title="Previous track">⏮</button>
+    <button id="player-play" class="player-btn player-btn-play" title="Play / Pause">▶</button>
+    <button id="player-next" class="player-btn" title="Next track">⏭</button>
+  </div>
+  <div class="player-info">
+    <span id="player-track-name" class="player-track-name">—</span>
+    <div class="player-seek-row">
+      <span id="player-time" class="player-time">0:00</span>
+      <input type="range" id="player-seek" class="player-range" min="0" max="100" value="0" step="0.1">
+      <span id="player-dur" class="player-time">0:00</span>
+    </div>
+  </div>
+  <div class="player-vol">
+    <span class="player-vol-icon">♪</span>
+    <input type="range" id="player-vol" class="player-range player-range-vol" min="0" max="1" value="0.7" step="0.01">
+  </div>
+  <audio id="player-audio"></audio>
+</div>
+
+<script src="/static/main.js"></script>
+<script src="/static/player.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
