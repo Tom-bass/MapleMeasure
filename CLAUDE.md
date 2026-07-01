@@ -17,14 +17,14 @@ The only routes that legitimately need `async def` are those that call `await fi
 | Path constants + template singleton | `core.py` |
 | Config read/write | `config.py` |
 | Dashboard, sessions CRUD, CSV export/import | `routes/sessions.py` |
-| Settings (auto-backup toggle) | `routes/settings.py` |
-| Audio track list API | `routes/api.py` |
+| Settings (auto-backup toggle + backup folder) | `routes/settings.py` |
+| Folder picker + server-side CSV backup | `routes/api.py` |
 
 Do not add SQL to route files. Do not add path constants outside `core.py`.
 
 ## PyInstaller frozen paths
 
-`ASSETS_DIR`, `STATIC_DIR`, and `TEMPLATE_DIR` use `_BUNDLE_DIR` (`sys._MEIPASS` when frozen) because they are read-only bundle content.  
+`STATIC_DIR` and `TEMPLATE_DIR` use `_BUNDLE_DIR` (`sys._MEIPASS` when frozen) because they are read-only bundle content.  
 `DB_PATH`, `UPLOADS_DIR`, and `CONFIG_PATH` use `BASE_DIR` (next to the `.exe`) because they are user-writable and must persist between runs.
 
 ## Templates
@@ -42,18 +42,14 @@ sessions (id, created_at, session_date, auto_battle_minutes, kills, solo_frags, 
 
 Old columns from a previous version of the app (`level_before`, `level_after`, `mesos_earned`, `exp_gained`, `raw_llm_response`, etc.) may exist in user databases created before the rewrite — the schema uses `CREATE TABLE IF NOT EXISTS` so they are preserved but never read or written.
 
-## Audio assets
-
-`assets/` is gitignored (copyright). The CI build has no audio; local builds do.  
-The PyInstaller spec bundles `assets/` via `('assets', 'assets')` in `datas`; the CI workflow creates an empty `assets/` directory before building so PyInstaller does not error.
-
 ## Config
 
 `config.json` lives next to the `.exe` and is gitignored. Current keys:
 
 | Key | Type | Default | Purpose |
 |---|---|---|---|
-| `auto_backup` | bool | `false` | Download CSV on dashboard load (once per browser session) |
+| `auto_backup` | bool | `false` | Save CSV backup on dashboard load (once per browser session) |
+| `backup_folder` | string | `""` | Folder path for server-side CSV backup; empty falls back to browser download |
 
 `config.py` merges any stored values over `_DEFAULTS`, so new keys added to `_DEFAULTS` are available immediately even on existing installations.
 

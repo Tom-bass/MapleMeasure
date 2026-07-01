@@ -1,6 +1,6 @@
 # MapleMeasure
 
-A local desktop web app for MapleStory Classic players. Log auto-battle sessions, track kill rates and SOL Frag drop rates over time, and visualise trends — all without sending data anywhere.
+A local desktop web app for MapleStory Mobile players. Log auto-battle sessions, track kill rates and SOL Frag drop rates over time, and visualise trends — all without sending data anywhere.
 
 Double-click the `.exe`. Your browser opens. That's it.
 
@@ -10,10 +10,9 @@ Double-click the `.exe`. Your browser opens. That's it.
 
 - **Manual session logging** — enter Duration, Kills, and SOL Frags gathered; optional screenshot per session
 - **Dashboard** — aggregate stat cards and per-date trend charts (kills/day, SOL frags/day) across all sessions
-- **Session history** — sortable, paginated table with per-column bar charts and automatic average/total footer rows; includes a computed SOL Frags per 1,000 Kills rate
+- **Session history** — sortable, paginated table with per-column bar charts and automatic average/total footer rows; includes computed Frags per Hour and SOL Frags per 1,000 Kills rates
 - **CSV export & import** — full roundtrip: export all sessions, edit offline, re-import; row-level validation with per-row error reporting
-- **Auto-backup** — optional setting that silently downloads a CSV backup each time the app launches (once per browser session via `sessionStorage`)
-- **Music player** — persistent cross-page audio player for MapleStory BGM from the `assets/` folder
+- **Auto-backup** — optional setting that silently saves a CSV backup each time the app launches; choose a folder via the native Windows folder picker or fall back to the browser Downloads folder
 - **100% local** — SQLite database, no account, no cloud, no telemetry
 
 ---
@@ -71,14 +70,14 @@ config.py           Reads/writes config.json next to the .exe (persists user set
 routes/
   sessions.py       Dashboard (/), new session (/upload), history (/sessions),
                     detail/edit/delete (/sessions/{id}), CSV export, CSV import
-  settings.py       /settings — auto-backup toggle
-  api.py            /api/tracks — audio file list for the BGM player
+  settings.py       /settings — auto-backup toggle and backup folder config
+  api.py            /api/browse-folder — native OS folder picker (tkinter)
+                    /api/backup — server-side CSV write to configured folder
 
 templates/          Jinja2 server-rendered HTML; no JS framework, no build step
 static/
   style.css         Dark gaming theme (#0d1117 bg, #f0a500 amber, #1a6fb5 blue); CSS custom properties throughout
-  main.js           Shared UI helpers (drop row management, etc.)
-  player.js         BGM player (shuffle, seek, volume, cross-page persistence)
+  main.js           Shared UI helpers
 
 .github/workflows/
   build.yml         Lint + import-check on every push; Windows EXE build on v* tags → GitHub Release
@@ -97,7 +96,7 @@ User submits form (/upload)
 **PyInstaller path resolution** (`core.py`):
 
 ```python
-# Read-only bundle content (templates, static, assets) uses sys._MEIPASS when frozen
+# Read-only bundle content (templates, static) uses sys._MEIPASS when frozen
 # User-writable files (DB, uploads, config) use sys.executable's directory
 # This ensures data persists between exe runs rather than being unpacked to a temp dir
 ```
