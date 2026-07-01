@@ -30,8 +30,7 @@
       <div>
         <div style="font-weight:500;margin-bottom:0.25rem">Auto-backup on launch</div>
         <div class="text-muted text-sm">
-          Automatically download a CSV of all sessions each time MapleMeasure opens.
-          The file saves to your default Downloads folder.
+          Automatically save a CSV of all sessions each time MapleMeasure opens.
         </div>
       </div>
       <label class="toggle-switch">
@@ -42,9 +41,62 @@
     </div>
 
     <div style="margin-top:1.25rem;border-top:1px solid var(--border);padding-top:1.25rem">
+      <div style="font-weight:500;margin-bottom:0.25rem">Backup folder</div>
+      <div class="text-muted text-sm" style="margin-bottom:0.6rem">
+        Where auto-backup files are saved. Leave empty to use your default Downloads folder.
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem">
+        <span id="folder-display" style="
+              flex:1;font-size:0.85rem;
+              background:var(--surface);border:1px solid var(--border);border-radius:4px;
+              padding:0.4rem 0.6rem;word-break:break-all;
+              color:{{ 'var(--text)' if cfg.backup_folder else 'var(--muted)' }}">
+          {{ cfg.backup_folder or 'Not set — using Downloads folder' }}
+        </span>
+        <button type="button" id="browse-btn" class="btn btn-secondary" style="flex-shrink:0">Browse…</button>
+        <button type="button" id="clear-btn" class="btn btn-secondary" style="flex-shrink:0">Clear</button>
+      </div>
+      <input type="hidden" name="backup_folder" id="backup-folder-input" value="{{ cfg.backup_folder or '' }}">
+    </div>
+
+    <div style="margin-top:1.25rem;border-top:1px solid var(--border);padding-top:1.25rem">
       <button type="submit" class="btn btn-primary">Save</button>
     </div>
 
   </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const display   = document.getElementById('folder-display');
+  const input     = document.getElementById('backup-folder-input');
+  const browseBtn = document.getElementById('browse-btn');
+  const clearBtn  = document.getElementById('clear-btn');
+
+  browseBtn.addEventListener('click', async () => {
+    browseBtn.disabled = true;
+    browseBtn.textContent = 'Opening…';
+    try {
+      const res  = await fetch('/api/browse-folder');
+      const data = await res.json();
+      if (data.path) {
+        display.textContent = data.path;
+        display.style.color = 'var(--text)';
+        input.value = data.path;
+      }
+    } finally {
+      browseBtn.disabled = false;
+      browseBtn.textContent = 'Browse…';
+    }
+  });
+
+  clearBtn.addEventListener('click', () => {
+    display.textContent = 'Not set — using Downloads folder';
+    display.style.color = 'var(--muted)';
+    input.value = '';
+  });
+})();
+</script>
 {% endblock %}

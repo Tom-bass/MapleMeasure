@@ -2,7 +2,8 @@ import json
 import os
 
 _DEFAULTS = {
-    "auto_backup": False,
+    "auto_backup":   False,
+    "backup_folder": "",
 }
 
 

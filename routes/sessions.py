@@ -62,6 +62,7 @@ def dashboard(request: Request):
         "chart_kills":    json.dumps(chart_kills),
         "chart_frags":    json.dumps(chart_frags),
         "auto_backup":    cfg.get("auto_backup", False),
+        "backup_folder":  cfg.get("backup_folder", ""),
     })
 
 

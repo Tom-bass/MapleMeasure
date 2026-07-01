@@ -59,6 +59,7 @@
           <th>{{ sort_link('Duration (min)', 'auto_battle_minutes') }}</th>
           <th>{{ sort_link('Kills', 'kills') }}</th>
           <th>{{ sort_link('SOL Frags', 'solo_frags') }}</th>
+          <th>Frags / Hour</th>
           <th>Frags / 1K Kills</th>
           <th>{{ sort_link('Logged', 'created_at') }}</th>
         </tr>
@@ -71,6 +72,7 @@
           <td>{{ s.auto_battle_minutes or '—' }}</td>
           <td>{{ "{:,}".format(s.kills) if s.kills else '—' }}</td>
           <td>{{ "{:,}".format(s.solo_frags) if s.solo_frags else '—' }}</td>
+          <td>{{ (s.solo_frags / (s.auto_battle_minutes / 60)) | round(1) if (s.auto_battle_minutes and s.solo_frags is not none) else '—' }}</td>
           <td>{{ (s.solo_frags / s.kills * 1000) | round(2) if (s.kills and s.solo_frags is not none) else '—' }}</td>
           <td class="text-muted text-sm">{{ s.created_at[:10] if s.created_at else '—' }}</td>
         </tr>
@@ -83,6 +85,7 @@
           <td>{{ analytics.avg_minutes }}</td>
           <td>{{ "{:,}".format(analytics.avg_kills) }}</td>
           <td>{{ analytics.avg_frags }}</td>
+          <td>{{ analytics.avg_frags_per_hour }}</td>
           <td>{{ analytics.avg_frags_per_1k }}</td>
           <td></td>
         </tr>
@@ -91,6 +94,7 @@
           <td>{{ "{:,}".format(analytics.total_minutes) }}</td>
           <td>{{ "{:,}".format(analytics.total_kills) }}</td>
           <td>{{ "{:,}".format(analytics.total_frags) }}</td>
+          <td>{{ analytics.total_frags_per_hour }}</td>
           <td>{{ analytics.total_frags_per_1k }}</td>
           <td></td>
         </tr>

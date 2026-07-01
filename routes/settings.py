@@ -14,8 +14,9 @@ def settings_page(request: Request):
 
 
 @router.post("/settings")
-def settings_save(auto_backup: str = Form(default="")):
+def settings_save(auto_backup: str = Form(default=""), backup_folder: str = Form(default="")):
     cfg = load_config(CONFIG_PATH)
-    cfg["auto_backup"] = (auto_backup == "on")
+    cfg["auto_backup"]   = (auto_backup == "on")
+    cfg["backup_folder"] = backup_folder.strip()
     save_config(CONFIG_PATH, cfg)
     return RedirectResponse("/settings", status_code=303)

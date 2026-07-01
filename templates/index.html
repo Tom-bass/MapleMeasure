@@ -84,11 +84,15 @@
 <script>
 if (!sessionStorage.getItem('backup_done')) {
   sessionStorage.setItem('backup_done', '1');
+  {% if backup_folder %}
+  fetch('/api/backup');
+  {% else %}
   const a = document.createElement('a');
   a.href = '/sessions/export';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
+  {% endif %}
 }
 </script>
 {% endif %}

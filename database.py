@@ -192,7 +192,12 @@ def get_sessions_analytics(db_path: str) -> dict:
                     CASE WHEN kills > 0
                          THEN CAST(solo_frags AS REAL) / kills * 1000
                          ELSE NULL END
-                ), 2)                                AS avg_frags_per_1k
+                ), 2)                                AS avg_frags_per_1k,
+                ROUND(AVG(
+                    CASE WHEN auto_battle_minutes > 0 AND solo_frags IS NOT NULL
+                         THEN CAST(solo_frags AS REAL) / auto_battle_minutes * 60
+                         ELSE NULL END
+                ), 1)                                AS avg_frags_per_hour
             FROM sessions
         """).fetchone()
 
@@ -211,9 +216,13 @@ def get_sessions_analytics(db_path: str) -> dict:
         "avg_kills":     int(agg["avg_kills"] or 0),
         "avg_frags":          agg["avg_frags"] or 0,
         "avg_frags_per_1k":   agg["avg_frags_per_1k"] or 0,
+        "avg_frags_per_hour": agg["avg_frags_per_hour"] or 0,
         "total_frags_per_1k": round(
             (agg["total_frags"] or 0) / agg["total_kills"] * 1000, 2
         ) if agg["total_kills"] else 0,
+        "total_frags_per_hour": round(
+            (agg["total_frags"] or 0) / agg["total_minutes"] * 60, 1
+        ) if agg["total_minutes"] else 0,
         "chart_rows":    chart_rows,
     }
 
