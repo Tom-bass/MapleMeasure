@@ -1,4 +1,3 @@
-import os
 import threading
 import webbrowser
 from contextlib import asynccontextmanager
@@ -7,7 +6,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 
-from core import DB_PATH, STATIC_DIR, UPLOADS_DIR, ASSETS_DIR, templates
+from core import DB_PATH, STATIC_DIR, UPLOADS_DIR, templates
 from database import init_db
 from routes import api, sessions, settings
 
@@ -22,8 +21,6 @@ app = FastAPI(lifespan=lifespan)
 
 app.mount("/static",  StaticFiles(directory=STATIC_DIR),  name="static")
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
-if os.path.isdir(ASSETS_DIR) and os.listdir(ASSETS_DIR):
-    app.mount("/assets", StaticFiles(directory=ASSETS_DIR), name="assets")
 
 app.include_router(api.router)
 app.include_router(sessions.router)

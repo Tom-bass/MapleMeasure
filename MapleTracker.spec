@@ -12,7 +12,6 @@ a = Analysis(
     datas=[
         ('templates', 'templates'),
         ('static',    'static'),
-        ('assets',    'assets'),    # MapleStory BGM — bundled into the exe
     ],
     hiddenimports=[
         # uvicorn imports these dynamically; PyInstaller misses them

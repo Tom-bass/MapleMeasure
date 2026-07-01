@@ -3,24 +3,11 @@ import os
 from datetime import datetime
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-from core import ASSETS_DIR, DB_PATH, CONFIG_PATH
-from config import load_config, save_config
+from core import DB_PATH, CONFIG_PATH
+from config import load_config
 from database import export_sessions_rows
 
 router = APIRouter(prefix="/api")
-
-_AUDIO_EXTS = {".mp3", ".ogg", ".wav", ".flac", ".m4a"}
-
-
-@router.get("/tracks")
-def list_tracks():
-    if not os.path.isdir(ASSETS_DIR):
-        return {"tracks": []}
-    tracks = sorted(
-        f for f in os.listdir(ASSETS_DIR)
-        if os.path.splitext(f)[1].lower() in _AUDIO_EXTS
-    )
-    return {"tracks": tracks}
 
 
 @router.get("/browse-folder")

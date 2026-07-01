@@ -25,12 +25,7 @@ UPLOADS_DIR  = os.path.join(BASE_DIR,    "uploads")
 CONFIG_PATH  = os.path.join(BASE_DIR,    "config.json")
 TEMPLATE_DIR = os.path.join(_BUNDLE_DIR, "templates")
 STATIC_DIR   = os.path.join(_BUNDLE_DIR, "static")
-ASSETS_DIR   = os.path.join(_BUNDLE_DIR, "assets")   # read-only bundle content
-
 os.makedirs(UPLOADS_DIR, exist_ok=True)
-# assets/ is read-only when frozen (extracted from bundle); only create in dev
-if not getattr(sys, "frozen", False):
-    os.makedirs(ASSETS_DIR, exist_ok=True)
 
 # ---------------------------------------------------------------------------
 # Jinja2 template engine — one instance shared across all route modules
